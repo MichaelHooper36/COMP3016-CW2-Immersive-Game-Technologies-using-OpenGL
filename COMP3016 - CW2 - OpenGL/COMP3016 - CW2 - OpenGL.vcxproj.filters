@@ -24,12 +24,18 @@
     <ClCompile Include="shaders\LoadShaders.cpp">
       <Filter>shaders</Filter>
     </ClCompile>
+    <ClCompile Include="stbImageLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shaders\LoadShaders.h">
       <Filter>shaders</Filter>
     </ClInclude>
-    <ClInclude Include="header.h">
+    <ClInclude Include="stb_image.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
