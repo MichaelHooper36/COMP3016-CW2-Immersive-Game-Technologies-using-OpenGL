@@ -1,14 +1,19 @@
+//STD
 #include <iostream>
+
+//GLEW
 #include <GL/glew.h>
 
 //GLM
 #include "glm/ext/vector_float3.hpp"
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext/matrix_transform.hpp> // GLM: translate, rotate
+#include <glm/gtc/type_ptr.hpp> // GLM: access to the value_ptr
 
-#include <GLFW/glfw3.h>
+//GENERAL
 #include "main.h"
 #include "shaders/LoadShaders.h"
+
+//TEXTURING
 #include "stb_image.h"
 
 using namespace std;
@@ -29,6 +34,9 @@ enum Buffer_IDs { ArrayBuffer, NumBuffers = 4 };
 GLuint Buffers[NumBuffers];
 
 //Transformations
+mat4 transform;
+
+//Transformations
 //Relative position within world space
 vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 //The direction of travel
@@ -36,29 +44,20 @@ vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
 //Up position within world space
 vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
-void ProcessUserInput(GLFWwindow* WindowIn)
-{
-    //Closes window if 'ESC' key is pressed
-    if (glfwGetKey(WindowIn, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(WindowIn, true);
-    }
-}
+//Time
+//Time change
+float deltaTime = 0.0f;
+//Last value of time change
+float lastFrame = 0.0f;
 
 int main()
 {
     //Initialisation of GLFW
     glfwInit();
-
-	windowWidth = 1280;
-	windowHeight = 720;
     //Initialisation of 'GLFWwindow' object
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "COMP3016-CW2", NULL, NULL);
+    windowWidth = 1280;
+    windowHeight = 720;
+    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Lab5", NULL, NULL);
 
     //Checks if window has been successfully instantiated
     if (window == NULL)
@@ -88,19 +87,15 @@ int main()
     //Sets the viewport size within the window to match the window size of 1280x720
     glViewport(0, 0, 1280, 720);
 
+    //Sets the framebuffer_size_callback() function as the callback for the window resizing event
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    //Gets index of colourIn uniform variable
-    GLint colourLocation = glGetUniformLocation(program, "colourIn");
-    //Sets colourIn
-    glUniform4f(colourLocation, 1.0f, 0.25f, 0.0f, 1.0f);
 
     float vertices[] = {
         //Positions             //Textures
-        0.5f, 0.5f, 0.0f,       1.0f, 1.0f, //top right
-        0.5f, -0.5f, 0.0f,      0.0f, 1.0f, //bottom right
-        -0.5f, -0.5f, 0.0f,     0.0f, 0.0f, //bottom left
-        -0.5f, 0.5f, 0.0f,      1.0f, 0.0f  //top left
+        0.5f, 0.5f, 0.5f,       1.0f, 0.0f, //top right
+        0.5f, -0.5f, 0.5f,      1.0f, 1.0f, //bottom right
+        -0.5f, -0.5f, 0.5f,     0.0f, 1.0f, //bottom left
+        -0.5f, 0.5f, 0.5f,      0.0f, 0.0f  //top left
     };
 
     unsigned int indices[] = {
@@ -109,20 +104,19 @@ int main()
     };
 
     //Sets index of VAO
-    glGenVertexArrays(NumVAOs, VAOs); //NumVAOs, VAOs
+    glGenVertexArrays(NumVAOs, VAOs);
     //Binds VAO to a buffer
-    glBindVertexArray(VAOs[0]); //VAOs[0]
+    glBindVertexArray(VAOs[0]);
     //Sets indexes of all required buffer objects
-    glGenBuffers(NumBuffers, Buffers); //NumBuffers, Buffers
-    //glGenBuffers(1, &EBO);
+    glGenBuffers(NumBuffers, Buffers);
 
     //Binds vertex object to array buffer
-    glBindBuffer(GL_ARRAY_BUFFER, Buffers[Triangles]); //Buffers[Triangles]
+    glBindBuffer(GL_ARRAY_BUFFER, Buffers[Triangles]);
     //Allocates buffer memory for the vertices of the 'Triangles' buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     //Binding & allocation for indices
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Buffers[Indices]); //Buffers[Indices]
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Buffers[Indices]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     //Allocation & indexing of vertex attribute memory for vertex shader
@@ -139,16 +133,18 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    //Texture index
+    unsigned int texture;
     //Textures to generate
-    glGenTextures(NumBuffers, Buffers);
+    glGenTextures(1, &texture);
 
     //Binding texture to type 2D texture
-    glBindTexture(GL_TEXTURE_2D, Buffers[Textures]);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
-    //Selects x axis (S) of texture bound to GL_TEXTURE_2D & sets to repeat beyond normalised coordinates
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    //Selects y axis (T) equivalently
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //Sets to use linear interpolation between adjacent mipmaps
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    //Sets to use linear interpolation upscaling (past largest mipmap texture)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     //Parameters that will be sent & set based on retrieved texture
     int width, height, colourChannels;
@@ -173,7 +169,6 @@ int main()
 
     //Model matrix
     mat4 model = mat4(1.0f);
-    //model = mat4(1.0f);
     //Scaling to zoom in
     model = scale(model, vec3(2.0f, 2.0f, 2.0f));
     //Rotation to look down
@@ -182,7 +177,7 @@ int main()
     model = translate(model, vec3(0.0f, 1.f, -1.5f));
 
     //View matrix
-    mat4 view = lookAt(vec3(0.0f, 0.0f, 3.0f), vec3(0.0f, 0.0f, 2.0f), vec3(0.0f, 1.0f, 0.0f));
+    mat4 view = lookAt(cameraPosition, cameraFront, cameraUp);
 
     //Projection matrix
     mat4 projection = perspective(radians(45.0f), (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
@@ -192,25 +187,75 @@ int main()
     int mvpLoc = glGetUniformLocation(program, "mvpIn");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, value_ptr(mvp));
 
-
     //Render loop
     while (glfwWindowShouldClose(window) == false)
     {
-        ProcessUserInput(window);
+        //Time
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-        glClearColor(0.25f, 0.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+        //Input
+        ProcessUserInput(window); //Takes user input
+
+        //Rendering
+        glClearColor(0.25f, 0.0f, 1.0f, 1.0f); //Colour to display on cleared window
+        glClear(GL_COLOR_BUFFER_BIT); //Clears the colour buffer
+
+        //Transformations
+        mat4 view = lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+        mat4 mvp = projection * view * model;
+        int mvpLoc = glGetUniformLocation(program, "mvpIn");
+
+        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, value_ptr(mvp));
 
         //Drawing
-        glBindTexture(GL_TEXTURE_2D, Buffers[Textures]);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAOs[0]); //Bind buffer object to render; VAOs[0]
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+        //Refreshing
+        glfwSwapBuffers(window); //Swaps the colour buffer
+        glfwPollEvents(); //Queries all GLFW events
     }
 
+    //Safely terminates GLFW
     glfwTerminate();
 
     return 0;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    //Resizes window based on contemporary width & height values
+    glViewport(0, 0, width, height);
+}
+
+void ProcessUserInput(GLFWwindow* WindowIn)
+{
+    //Closes window on 'exit' key press
+    if (glfwGetKey(WindowIn, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(WindowIn, true);
+    }
+
+    //Extent to which to move in one instance
+    const float movementSpeed = 1.0f * deltaTime;
+    //WASD controls
+    if (glfwGetKey(WindowIn, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        cameraPosition += movementSpeed * cameraFront;
+    }
+    if (glfwGetKey(WindowIn, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        cameraPosition -= movementSpeed * cameraFront;
+    }
+    if (glfwGetKey(WindowIn, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        cameraPosition -= normalize(cross(cameraFront, cameraUp)) * movementSpeed;
+    }
+    if (glfwGetKey(WindowIn, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        cameraPosition += normalize(cross(cameraFront, cameraUp)) * movementSpeed;
+    }
 }

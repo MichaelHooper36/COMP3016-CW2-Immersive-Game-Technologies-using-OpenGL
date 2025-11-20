@@ -6,13 +6,14 @@ layout (location = 1) in vec2 textureCoordinatesVertex;
 
 //Texture coordinates to send
 out vec2 textureCoordinatesFrag;
-//Transformation
-uniform mat4 transformIn;
+
+//Model-View-Projection Matrix
+uniform mat4 mvpIn;
 
 void main()
 {
-    //Transformation applied to vertices
-    gl_Position = transformIn * vec4(position.x, position.y, position.z, 1.0);
+    //Transformations applied to vertices
+    gl_Position = mvpIn * vec4(position.x, position.y, position.z, 1.0);
     //Sending texture coordinates to next stage
     textureCoordinatesFrag = textureCoordinatesVertex;
 }
