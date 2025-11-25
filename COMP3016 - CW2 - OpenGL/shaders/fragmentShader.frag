@@ -2,13 +2,11 @@
 //Colour value to send to next stage
 out vec4 FragColor;
 
-//Texture coordinates from last stage
-in vec2 textureCoordinatesFrag;
-//Texture (colours)
-uniform sampler2D textureIn;
+//Colour coordinates from last stage
+in vec3 colourFrag;
 
 void main()
 {
-    //Setting of texture & its coordinates as colour map
-    FragColor = texture(textureIn, textureCoordinatesFrag);
+    //Setting of colour coordinates to colour map
+    FragColor = vec4(colourFrag, 1.0f);
 }

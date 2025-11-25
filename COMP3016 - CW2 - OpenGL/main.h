@@ -7,4 +7,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 //Processes user input on a particular window
 void ProcessUserInput(GLFWwindow* WindowIn);
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+
 GLuint program;

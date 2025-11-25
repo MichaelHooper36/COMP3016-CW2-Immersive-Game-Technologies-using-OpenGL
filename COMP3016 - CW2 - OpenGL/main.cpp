@@ -16,6 +16,8 @@
 //TEXTURING
 #include "stb_image.h"
 
+#include "FastNoiseLite.h"
+
 using namespace std;
 using namespace glm;
 
@@ -50,6 +52,29 @@ float deltaTime = 0.0f;
 //Last value of time change
 float lastFrame = 0.0f;
 
+//Camera sideways rotation
+float cameraYaw = -90.0f;
+//Camera vertical rotation
+float cameraPitch = 0.0f;
+//Determines if first entry of mouse into window
+bool mouseFirstEntry = true;
+//Positions of camera from given last frame
+float cameraLastXPos = 800.0f / 2.0f;
+float cameraLastYPos = 600.0f / 2.0f;
+
+#define RENDER_DISTANCE 128 //Render width of map
+#define MAP_SIZE RENDER_DISTANCE * RENDER_DISTANCE //Size of map in x & z space
+
+//Amount of chunks across one dimension
+const int squaresRow = RENDER_DISTANCE - 1;
+//Two triangles per square to form a 1x1 chunk
+const int trianglesPerSquare = 2;
+//Amount of triangles on map
+const int trianglesGrid = squaresRow * squaresRow * trianglesPerSquare;
+
+//Generation of height map vertices
+GLfloat terrainVertices[MAP_SIZE][6];
+
 int main()
 {
     //Initialisation of GLFW
@@ -57,7 +82,7 @@ int main()
     //Initialisation of 'GLFWwindow' object
     windowWidth = 1280;
     windowHeight = 720;
-    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Lab5", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "COMP3016 - CW2", NULL, NULL);
 
     //Checks if window has been successfully instantiated
     if (window == NULL)
@@ -66,6 +91,8 @@ int main()
         glfwTerminate();
         return -1;
     }
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     //Binds OpenGL to window
     glfwMakeContextCurrent(window);
@@ -89,19 +116,132 @@ int main()
 
     //Sets the framebuffer_size_callback() function as the callback for the window resizing event
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	//Sets the mouse_callback() function as the callback for mouse movement
+	glfwSetCursorPosCallback(window, mouse_callback);
 
-    float vertices[] = {
-        //Positions             //Textures
-        0.5f, 0.5f, 0.5f,       1.0f, 0.0f, //top right
-        0.5f, -0.5f, 0.5f,      1.0f, 1.0f, //bottom right
-        -0.5f, -0.5f, 0.5f,     0.0f, 1.0f, //bottom left
-        -0.5f, 0.5f, 0.5f,      0.0f, 0.0f  //top left
-    };
+    //Assigning perlin noise type for map
+    FastNoiseLite TerrainNoise;
+    //Setting noise type to Perlin
+    TerrainNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+    //Sets the noise scale
+    TerrainNoise.SetFrequency(0.05f);
+    //Generates a random seed between integers 0 & 100
+    int terrainSeed = rand() % 100;
+    //Sets seed for noise
+    TerrainNoise.SetSeed(terrainSeed);
 
-    unsigned int indices[] = {
-        0, 1, 3, //first triangle
-        1, 2, 3 //second triangle
-    };
+    //Biome noise
+    FastNoiseLite BiomeNoise;
+    BiomeNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
+    BiomeNoise.SetFrequency(0.05f);
+    int biomeSeed = rand() % 100;
+    TerrainNoise.SetSeed(biomeSeed);
+
+	GLfloat terrainVertices[MAP_SIZE][6];
+
+    //Terrain vertice index
+    int i = 0;
+    //Using x & y nested for loop in order to apply noise 2-dimensionally
+    for (int y = 0; y < RENDER_DISTANCE; y++)
+    {
+        for (int x = 0; x < RENDER_DISTANCE; x++)
+        {
+            //Setting of height from 2D noise value at respective x & y coordinate
+            terrainVertices[i][1] = TerrainNoise.GetNoise((float)x, (float)y);
+
+            //Retrieval of biome to set
+            float biomeValue = BiomeNoise.GetNoise((float)x, (float)y);
+
+            if (biomeValue <= -0.75f) //Plains
+            {
+                terrainVertices[i][3] = 0.0f;
+                terrainVertices[i][4] = 0.75f;
+                terrainVertices[i][5] = 0.25f;
+            }
+            else //Desert
+            {
+                terrainVertices[i][3] = 1.0f;
+                terrainVertices[i][4] = 1.0f;
+                terrainVertices[i][5] = 0.5f;
+            }
+
+            i++;
+        }
+    }
+
+    //Positions to start drawing from
+    float drawingStartPosition = 1.0f;
+    float columnVerticesOffset = drawingStartPosition;
+    float rowVerticesOffset = drawingStartPosition;
+
+    int rowIndex = 0;
+    for (int i = 0; i < MAP_SIZE; i++)
+    {
+        //Generation of x & z vertices for horizontal plane
+        terrainVertices[i][0] = columnVerticesOffset;
+        terrainVertices[i][2] = rowVerticesOffset;
+
+        //Determination of biomes based on height
+        if (terrainVertices[i][1] >= (0.5f / 8.0f))
+        {
+            //Snow
+            terrainVertices[i][3] = 1.0f;
+            terrainVertices[i][4] = 1.0f;
+            terrainVertices[i][5] = 1.0f;
+        }
+
+        //Shifts x position across for next triangle along grid
+        columnVerticesOffset = columnVerticesOffset + -0.0625f;
+
+        //Indexing of each chunk within row
+        rowIndex++;
+        //True when all triangles of the current row have been generated
+        if (rowIndex == RENDER_DISTANCE)
+        {
+            //Resets for next row of triangles
+            rowIndex = 0;
+            //Resets x position for next row of triangles
+            columnVerticesOffset = drawingStartPosition;
+            //Shifts y position
+            rowVerticesOffset = rowVerticesOffset + -0.0625f;
+        }
+    }
+
+    //Generation of height map indices
+    GLuint terrainIndices[trianglesGrid][3];
+
+    //Positions to start mapping indices from
+    int columnIndicesOffset = 0;
+    int rowIndicesOffset = 0;
+
+    //Generation of map indices in the form of chunks (1x1 right angle triangle squares)
+    for (int i = 0; i < trianglesGrid - 1; i += 2)
+    {
+        terrainIndices[i][0] = columnIndicesOffset + rowIndicesOffset; //top left
+        terrainIndices[i][2] = RENDER_DISTANCE + columnIndicesOffset + rowIndicesOffset; //bottom left
+        terrainIndices[i][1] = 1 + columnIndicesOffset + rowIndicesOffset; //top right
+
+        terrainIndices[i + 1][0] = 1 + columnIndicesOffset + rowIndicesOffset; //top right
+        terrainIndices[i + 1][2] = RENDER_DISTANCE + columnIndicesOffset + rowIndicesOffset; //bottom left
+        terrainIndices[i + 1][1] = 1 + RENDER_DISTANCE + columnIndicesOffset + rowIndicesOffset; //bottom right
+
+        //Shifts x position across for next chunk along grid
+        columnIndicesOffset = columnIndicesOffset + 1;
+
+        //Indexing of each chunk within row
+        rowIndex++;
+
+        //True when all chunks of the current row have been generated
+        if (rowIndex == squaresRow)
+        {
+            //Resets for next row of chunks
+            rowIndex = 0;
+            //Resets x position for next row of chunks
+            columnIndicesOffset = 0;
+            //Shifts y position
+            rowIndicesOffset = rowIndicesOffset + RENDER_DISTANCE;
+        }
+    }
 
     //Sets index of VAO
     glGenVertexArrays(NumVAOs, VAOs);
@@ -113,19 +253,19 @@ int main()
     //Binds vertex object to array buffer
     glBindBuffer(GL_ARRAY_BUFFER, Buffers[Triangles]);
     //Allocates buffer memory for the vertices of the 'Triangles' buffer
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(terrainVertices), terrainVertices, GL_STATIC_DRAW);
 
     //Binding & allocation for indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Buffers[Indices]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(terrainIndices), terrainIndices, GL_STATIC_DRAW);
 
     //Allocation & indexing of vertex attribute memory for vertex shader
     //Positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    //Textures
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    //Colours
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     //Unbinding
@@ -149,7 +289,7 @@ int main()
     //Parameters that will be sent & set based on retrieved texture
     int width, height, colourChannels;
     //Retrieves texture data
-    unsigned char* data = stbi_load("media/absolutemichael.jpg", &width, &height, &colourChannels, 0);
+    unsigned char* data = stbi_load("media/woodPlanks.jpg", &width, &height, &colourChannels, 0);
 
     if (data) //If retrieval successful
     {
@@ -171,10 +311,10 @@ int main()
     mat4 model = mat4(1.0f);
     //Scaling to zoom in
     model = scale(model, vec3(2.0f, 2.0f, 2.0f));
-    //Rotation to look down
-    model = rotate(model, radians(-45.0f), vec3(1.0f, 0.0f, 0.0f));
-    //Movement to position further back
-    model = translate(model, vec3(0.0f, 1.f, -1.5f));
+    //Looking straight forward
+    model = rotate(model, radians(0.0f), vec3(1.0f, 0.0f, 0.0f));
+    //Elevation to look upon terrain
+    model = translate(model, vec3(0.0f, -2.f, -1.5f));
 
     //View matrix
     mat4 view = lookAt(cameraPosition, cameraFront, cameraUp);
@@ -209,10 +349,27 @@ int main()
 
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, value_ptr(mvp));
 
+        //Prevents turning up & down beyond 90 degrees to look backwards
+        if (cameraPitch > 89.0f)
+        {
+            cameraPitch = 89.0f;
+        }
+        else if (cameraPitch < -89.0f)
+        {
+            cameraPitch = -89.0f;
+        }
+
+        //Modification of direction vector based on mouse turning
+        vec3 direction;
+        direction.x = cos(radians(cameraYaw)) * cos(radians(cameraPitch));
+        direction.y = sin(radians(cameraPitch));
+        direction.z = sin(radians(cameraYaw)) * cos(radians(cameraPitch));
+        cameraFront = normalize(direction);
+
         //Drawing
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAOs[0]); //Bind buffer object to render; VAOs[0]
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);
 
         //Refreshing
         glfwSwapBuffers(window); //Swaps the colour buffer
@@ -258,4 +415,32 @@ void ProcessUserInput(GLFWwindow* WindowIn)
     {
         cameraPosition += normalize(cross(cameraFront, cameraUp)) * movementSpeed;
     }
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    //Initially no last positions, so sets last positions to current positions
+    if (mouseFirstEntry)
+    {
+        cameraLastXPos = (float)xpos;
+        cameraLastYPos = (float)ypos;
+        mouseFirstEntry = false;
+    }
+
+    //Sets values for change in position since last frame to current frame
+    float xOffset = (float)xpos - cameraLastXPos;
+    float yOffset = cameraLastYPos - (float)ypos;
+
+    //Sets last positions to current positions for next frame
+    cameraLastXPos = (float)xpos;
+    cameraLastYPos = (float)ypos;
+
+    //Moderates the change in position based on sensitivity value
+    const float sensitivity = 0.025f;
+    xOffset *= sensitivity;
+    yOffset *= sensitivity;
+
+    //Adjusts yaw & pitch values against changes in positions
+    cameraYaw += xOffset;
+    cameraPitch += yOffset;
 }
