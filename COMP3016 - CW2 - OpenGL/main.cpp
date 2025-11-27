@@ -1,22 +1,31 @@
 //STD
 #include <iostream>
 
-//GLEW
-#include <GL/glew.h>
+//GLAD
+#include <glad/glad.h>
 
 //GLM
 #include "glm/ext/vector_float3.hpp"
 #include <glm/ext/matrix_transform.hpp> // GLM: translate, rotate
 #include <glm/gtc/type_ptr.hpp> // GLM: access to the value_ptr
 
+
 //GENERAL
 #include "main.h"
-#include "shaders/LoadShaders.h"
+
+//LEARNOPENGL
+#include <learnopengl/shader_m.h>
+#include <learnopengl/model.h>
 
 //TEXTURING
 #include "stb_image.h"
 
 #include "FastNoiseLite.h"
+
+//Assimp
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 using namespace std;
 using namespace glm;
@@ -75,6 +84,12 @@ const int trianglesGrid = squaresRow * squaresRow * trianglesPerSquare;
 //Generation of height map vertices
 GLfloat terrainVertices[MAP_SIZE][6];
 
+//Model-View-Projection Matrix
+mat4 mvp;
+mat4 model;
+mat4 view;
+mat4 projection;
+
 int main()
 {
     //Initialisation of GLFW
@@ -97,19 +112,18 @@ int main()
     //Binds OpenGL to window
     glfwMakeContextCurrent(window);
 
-    //Initialisation of GLEW
-    glewInit();
-
-    //Load shaders
-    ShaderInfo shaders[] =
+    //Initialisation of GLAD
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        { GL_VERTEX_SHADER, "shaders/vertexShader.vert" },
-        { GL_FRAGMENT_SHADER, "shaders/fragmentShader.frag" },
-        { GL_NONE, NULL }
-    };
+        cout << "GLAD failed to initialise\n";
+        return -1;
+    }
 
-    program = LoadShaders(shaders);
-    glUseProgram(program);
+    //Loading of shaders
+    Shader Shaders("shaders/vertexShader.vert", "shaders/fragmentShader.frag");
+    Model Shark("media/shark/Shark.obj");
+	Model Tree("media/tree/Pine_Tree_4.obj");
+    Shaders.use();
 
     //Sets the viewport size within the window to match the window size of 1280x720
     glViewport(0, 0, 1280, 720);
@@ -310,7 +324,7 @@ int main()
     //Model matrix
     mat4 model = mat4(1.0f);
     //Scaling to zoom in
-    model = scale(model, vec3(2.0f, 2.0f, 2.0f));
+    model = scale(model, vec3(0.025f, 0.025f, 0.025f));
     //Looking straight forward
     model = rotate(model, radians(0.0f), vec3(1.0f, 0.0f, 0.0f));
     //Elevation to look upon terrain
@@ -341,11 +355,25 @@ int main()
         //Rendering
         glClearColor(0.25f, 0.0f, 1.0f, 1.0f); //Colour to display on cleared window
         glClear(GL_COLOR_BUFFER_BIT); //Clears the colour buffer
+        glClear(GL_DEPTH_BUFFER_BIT); //Might need
+
+        glEnable(GL_CULL_FACE); //Discards all back-facing triangles
 
         //Transformations
-        mat4 view = lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
-        mat4 mvp = projection * view * model;
-        int mvpLoc = glGetUniformLocation(program, "mvpIn");
+        mat4 view = lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp); //Sets the position of the viewer, the movement direction in relation to it & the world up direction
+       
+        //Rock
+        SetMatrices(Shaders);
+        Shark.Draw(Shaders);
+
+        //Tree (changes MVP in relation to past values)
+        model = scale(model, vec3(0.05f, 0.05f, 0.05f));
+        SetMatrices(Shaders);
+        Tree.Draw(Shaders);
+
+        //Rock (reorient MVP back to starting values)
+        model = scale(model, vec3(20.0f, 20.0f, 20.0f));
+        SetMatrices(Shaders);
 
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, value_ptr(mvp));
 
@@ -443,4 +471,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     //Adjusts yaw & pitch values against changes in positions
     cameraYaw += xOffset;
     cameraPitch += yOffset;
+}
+
+void SetMatrices(Shader& ShaderProgramIn)
+{
+    mvp = projection * view * model; //Setting of MVP
+    ShaderProgramIn.setMat4("mvpIn", mvp); //Setting of uniform with Shader class
 }
