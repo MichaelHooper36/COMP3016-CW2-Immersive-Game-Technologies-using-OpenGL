@@ -43,16 +43,19 @@ GLuint Buffers[NumBuffers];
 
 //Transformations
 //Relative position within world space
-vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
+vec3 cameraPosition = vec3(-11.0f, 40.0f, -14.0f);
 //The direction of travel
 vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
 //Up position within world space
 vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
 
+vec3 sharkPosition = vec3(-5.0f, 1.0f, -4.0f);
+float sharkYaw = 45.0f;
+
 //Camera sidways rotation
 float cameraYaw = -90.0f;
 //Camera vertical rotation
-float cameraPitch = 0.0f;
+float cameraPitch = -90.0f;
 //Determines if first entry of mouse into window
 bool mouseFirstEntry = true;
 //Positions of camera from given last frame
@@ -111,11 +114,6 @@ int main()
         return -1;
     }
 
-	Shader Shaders("shaders/vertexShader.vert", "shaders/fragmentShader.frag");
-	Model Rock("media/rock/Rock07-Base.obj");
-	Model Shark("media/shark2/chark.obj");
-    Shaders.use();
-
     //Load shaders
     ShaderInfo shaders[] =
     {
@@ -128,7 +126,7 @@ int main()
     glUseProgram(program);
 
     //Sets the viewport size within the window to match the window size of 1280x720
-    glViewport(0, 0, 1280, 720);
+    glViewport(0, 0, windowWidth, windowHeight);
 
     //Sets the framebuffer_size_callback() function as the callback for the window resizing event
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -141,7 +139,7 @@ int main()
     //Setting noise type to Perlin
     TerrainNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
     //Sets the noise scale
-    TerrainNoise.SetFrequency(0.05f);
+    TerrainNoise.SetFrequency(0.03f);
     //Generates a random seed between integers 0 & 100
     int terrainSeed = rand() % 100;
     //Sets seed for noise
@@ -150,7 +148,7 @@ int main()
     //Biome noise
     FastNoiseLite BiomeNoise;
     BiomeNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
-    BiomeNoise.SetFrequency(0.05f);
+    BiomeNoise.SetFrequency(0.03f);
     int biomeSeed = rand() % 100;
     BiomeNoise.SetSeed(biomeSeed);
 
@@ -293,6 +291,13 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+	glEnable(GL_DEPTH_TEST); //Enables depth testing
+
+    Shader Shaders("shaders/vertexShader.vert", "shaders/fragmentShader.frag");
+	Shader ModelShaders("shaders/modelVertexShader.vert", "shaders/modelFragmentShader.frag");
+    Model Rock("media/rock/Rock07-Base.obj");
+    Model Shark("media/shark2/trex.obj");
+
     //Model matrix
     model = mat4(1.0f);
     //Scaling to zoom in
@@ -319,23 +324,41 @@ int main()
         //Rendering
         glClearColor(0.25f, 0.0f, 1.0f, 1.0f); //Colour to display on cleared window
         glClear(GL_COLOR_BUFFER_BIT); //Clears the colour buffer
+		glClear(GL_DEPTH_BUFFER_BIT); //Clears the depth buffer
 
         //Transformations
         view = lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
-		SetMatrices(Shaders); //Sets the MVP matrix within the shader
+
+        Shaders.use();
+        model = scale(model, vec3(2.0f, 2.0f, 2.0f));
+		SetMatrices(Shaders);
 
         //Drawing
         glBindVertexArray(VAOs[0]);
         glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);
 
-		model = scale(model, vec3(10.0f, 10.0f, 10.0f));
-		SetMatrices(Shaders);
+		ModelShaders.use();
+		model = scale(model, vec3(0.5f, 0.5f, 0.5f));
+        model = translate(model, vec3(0.0f, 0.0f, -1.0f));
+		model = scale(model, vec3(0.01f, 0.01f, 0.01f));
+		SetMatrices(ModelShaders);
+        Rock.Draw(ModelShaders);
 
-		Rock.Draw(Shaders);
-		//Shark.Draw(Shaders);
+        // Unbind previous diffuse to avoid leaking into the next draw if a model has no texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
-		model = scale(model, vec3(0.1f, 0.1f, 0.1f));
-		SetMatrices(Shaders);
+		model = scale(model, vec3(100.0f, 100.0f, 100.0f));
+		model = translate(model, sharkPosition);
+		model = scale(model, vec3(0.5f, 0.5f, 0.5f));
+        model = rotate(model, radians(sharkYaw), vec3(0.0f, 1.0f, 0.0f));
+		SetMatrices(ModelShaders);
+		Shark.Draw(ModelShaders);
+
+        model = rotate(model, radians(-sharkYaw), vec3(0.0f, 1.0f, 0.0f));
+		model = scale(model, vec3(2.0f, 2.0f, 2.0f));
+		model = translate(model, vec3(-sharkPosition.x, -sharkPosition.y, 1.0f - sharkPosition.z));
+		SetMatrices(ModelShaders);
 
         //Refreshing
         glfwSwapBuffers(window); //Swaps the colour buffer
@@ -408,23 +431,27 @@ void ProcessUserInput(GLFWwindow* WindowIn)
     }
 
     //Extent to which to move in one instance
-    const float movementSpeed = 1.0f * deltaTime;
+    const float movementSpeed = 5.0f * deltaTime;
+	const float rotationSpeed = 135.0f * deltaTime;
+
+	vec3 sharkForward = vec3(sin(radians(sharkYaw)), 0.0f, cos(radians(sharkYaw)));
+
     //WASD controls
     if (glfwGetKey(WindowIn, GLFW_KEY_W) == GLFW_PRESS)
     {
-        cameraPosition += movementSpeed * cameraFront;
+        sharkPosition += movementSpeed * sharkForward;
     }
     if (glfwGetKey(WindowIn, GLFW_KEY_S) == GLFW_PRESS)
     {
-        cameraPosition -= movementSpeed * cameraFront;
+        sharkPosition -= movementSpeed * sharkForward;
     }
     if (glfwGetKey(WindowIn, GLFW_KEY_A) == GLFW_PRESS)
     {
-        cameraPosition -= normalize(cross(cameraFront, cameraUp)) * movementSpeed;
+        sharkYaw += rotationSpeed;
     }
     if (glfwGetKey(WindowIn, GLFW_KEY_D) == GLFW_PRESS)
     {
-        cameraPosition += normalize(cross(cameraFront, cameraUp)) * movementSpeed;
+		sharkYaw -= rotationSpeed;
     }
 }
 

@@ -52,5 +52,17 @@
     <None Include="shaders\vertexShader.vert">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\modelFragmentShader.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\modelVertexShader.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="sharkVertexShader.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="sharkFragmentShader.frag">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
