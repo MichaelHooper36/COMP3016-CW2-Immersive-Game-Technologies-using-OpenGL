@@ -10,6 +10,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 //Processes user input on a particular window
 void ProcessUserInput(GLFWwindow* WindowIn);
 
-void SetMatrices(Shader& ShaderProgramIn); //Sets the matrices for a given shader program
+//Sets the model-view-projection matrix
+void SetMatrices(Shader& ShaderProgramIn);
 
 GLuint program;
