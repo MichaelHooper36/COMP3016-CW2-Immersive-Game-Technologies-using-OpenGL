@@ -7,18 +7,6 @@
       "RelativeMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|solutionrelative:main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\main.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|solutionrelative:main.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\modelFragmentShader.frag||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|solutionrelative:shaders\\modelFragmentShader.frag||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\modelVertexShader.vert||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|solutionrelative:shaders\\modelVertexShader.vert||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\sharkFragmentShader.frag||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|solutionrelative:sharkFragmentShader.frag||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
@@ -33,6 +21,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\vertexShader.vert||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|solutionrelative:shaders\\vertexShader.vert||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\main.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{2ADAA465-DC4A-42F1-AE44-2E16C4A91D01}|COMP3016 - CW2 - OpenGL.vcxproj|solutionrelative:main.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -42,24 +34,24 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 1,
               "Title": "sharkFragmentShader.frag",
               "DocumentMoniker": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\sharkFragmentShader.frag",
               "RelativeDocumentMoniker": "sharkFragmentShader.frag",
               "ToolTip": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\sharkFragmentShader.frag",
               "RelativeToolTip": "sharkFragmentShader.frag",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAcAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-01-07T12:43:18.018Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 2,
               "Title": "sharkVertexShader.vert",
               "DocumentMoniker": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\sharkVertexShader.vert",
               "RelativeDocumentMoniker": "sharkVertexShader.vert",
@@ -72,46 +64,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "modelVertexShader.vert",
-              "DocumentMoniker": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\modelVertexShader.vert",
-              "RelativeDocumentMoniker": "shaders\\modelVertexShader.vert",
-              "ToolTip": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\modelVertexShader.vert",
-              "RelativeToolTip": "shaders\\modelVertexShader.vert",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAiAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-01-07T12:05:26.556Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "modelFragmentShader.frag",
-              "DocumentMoniker": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\modelFragmentShader.frag",
-              "RelativeDocumentMoniker": "shaders\\modelFragmentShader.frag",
-              "ToolTip": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\modelFragmentShader.frag",
-              "RelativeToolTip": "shaders\\modelFragmentShader.frag",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-01-07T12:05:25.637Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 0,
               "Title": "main.cpp",
               "DocumentMoniker": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\main.cpp",
               "RelativeDocumentMoniker": "main.cpp",
-              "ToolTip": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\main.cpp*",
-              "RelativeToolTip": "main.cpp*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAALIBAAAgAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\main.cpp",
+              "RelativeToolTip": "main.cpp",
+              "ViewState": "AgIAAKcBAAAAAAAAAAAAALEBAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-11-20T13:45:40.086Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 3,
               "Title": "fragmentShader.frag",
               "DocumentMoniker": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\fragmentShader.frag",
               "RelativeDocumentMoniker": "shaders\\fragmentShader.frag",
@@ -124,7 +90,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 4,
               "Title": "vertexShader.vert",
               "DocumentMoniker": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\shaders\\vertexShader.vert",
               "RelativeDocumentMoniker": "shaders\\vertexShader.vert",
@@ -137,13 +103,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "main.h",
               "DocumentMoniker": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\main.h",
               "RelativeDocumentMoniker": "main.h",
               "ToolTip": "C:\\Users\\mikey\\Documents\\GitHub\\COMP3016-CW2-Immersive-Game-Technologies-using-OpenGL\\COMP3016 - CW2 - OpenGL\\main.h",
               "RelativeToolTip": "main.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAqAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-11-25T19:02:09.551Z",
               "EditorCaption": ""

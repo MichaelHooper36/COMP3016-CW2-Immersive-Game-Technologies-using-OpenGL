@@ -13,4 +13,6 @@ void ProcessUserInput(GLFWwindow* WindowIn);
 //Sets the model-view-projection matrix
 void SetMatrices(Shader& ShaderProgramIn);
 
+static void UpdateCameraFront();
+
 GLuint program;

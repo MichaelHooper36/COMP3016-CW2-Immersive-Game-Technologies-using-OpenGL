@@ -43,7 +43,7 @@ GLuint Buffers[NumBuffers];
 
 //Transformations
 //Relative position within world space
-vec3 cameraPosition = vec3(-11.0f, 40.0f, -14.0f);
+vec3 cameraPosition = vec3(-13.0f, 40.0f, -14.0f);
 //The direction of travel
 vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
 //Up position within world space
@@ -53,11 +53,11 @@ vec3 sharkPosition = vec3(-5.0f, 1.0f, -4.0f);
 float sharkYaw = 45.0f;
 
 //Camera sidways rotation
-float cameraYaw = -90.0f;
+float cameraYaw = 0.0f;
 //Camera vertical rotation
 float cameraPitch = -90.0f;
 //Determines if first entry of mouse into window
-bool mouseFirstEntry = true;
+bool mouseFirstEntry = false;
 //Positions of camera from given last frame
 float cameraLastXPos = 800.0f / 2.0f;
 float cameraLastYPos = 600.0f / 2.0f;
@@ -133,6 +133,22 @@ int main()
 
     //Sets the mouse_callback() function as the callback for the mouse movement event
     glfwSetCursorPosCallback(window, mouse_callback);
+
+    float vertices[] = {
+        //Positions             //Textures
+        0.5f, 0.5f, 0.5f,       1.0f, 1.0f, //top right
+        0.5f, -0.5f, 0.5f,      1.0f, 0.0f, //bottom right
+        -0.5f, -0.5f, 0.5f,     0.0f, 0.0f, //bottom left
+        -0.5f, 0.5f, 0.5f,      0.0f, 1.0f  //top left
+    };
+
+    unsigned int indices[] = {
+        0, 1, 3, //first triangle
+        1, 2, 3 //second triangle
+    };
+
+
+	UpdateCameraFront();
 
     //Assigning perlin noise type for map
     FastNoiseLite TerrainNoise;
@@ -291,10 +307,72 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    // Quad geometry buffers (after stbi_image_free(data); and before the render loop)
+    unsigned int quadVAO = 0, quadVBO = 0, quadEBO = 0;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glGenBuffers(1, &quadEBO);
+
+    glBindVertexArray(quadVAO);
+
+    // Upload quad vertices/indices (uses your existing 'vertices' and 'indices' arrays)
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // position -> location 0, stride = 5 floats
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // uv -> location 1, matches sharkVertexShader.vert
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+
+    //Texture index
+    unsigned int texture;
+    //Textures to generate
+    glGenTextures(1, &texture);
+
+    //Binding texture to type 2D texture
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    //Sets to use linear interpolation between adjacent mipmaps
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    //Sets to use linear interpolation upscaling (past largest mipmap texture)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_set_flip_vertically_on_load(true);
+
+    //Parameters that will be sent & set based on retrieved texture
+    int width, height, colourChannels;
+    //Retrieves texture data
+    unsigned char* data = stbi_load("media/absolutemichael.jpg", &width, &height, &colourChannels, 0);
+
+    if (data) //If retrieval successful
+    {
+        //Generation of texture from retrieved texture data
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        //Automatically generates all required mipmaps on bound texture
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else //If retrieval unsuccessful
+    {
+        cout << "Failed to load texture.\n";
+        return -1;
+    }
+
+    //Clears retrieved texture from memory
+    stbi_image_free(data);
+
 	glEnable(GL_DEPTH_TEST); //Enables depth testing
 
     Shader Shaders("shaders/vertexShader.vert", "shaders/fragmentShader.frag");
 	Shader ModelShaders("shaders/modelVertexShader.vert", "shaders/modelFragmentShader.frag");
+    Shader SharkShaders("shaders/sharkVertexShader.vert", "shaders/sharkFragmentShader.frag");
     Model Rock("media/rock/Rock07-Base.obj");
     Model Shark("media/shark2/trex.obj");
 
@@ -337,6 +415,25 @@ int main()
         glBindVertexArray(VAOs[0]);
         glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);
 
+		SharkShaders.use();
+		model = translate(model, vec3(-5.0f, 3.0f, -25.0f));
+		model = scale(model, vec3(10.0f, 10.0f, 10.0f));
+		SetMatrices(SharkShaders);
+
+        // Bind texture unit 0 and point the sampler to it
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        SharkShaders.setInt("textureIn", 0);
+
+        // Draw the quad VAO (not the terrain VAO)
+        glBindVertexArray(quadVAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+		model = scale(model, vec3(0.1f, 0.1f, 0.1f));
+		model = translate(model, vec3(5.0f, -3.0f, 25.0f));
+		SetMatrices(SharkShaders);
+
 		ModelShaders.use();
 		model = scale(model, vec3(0.5f, 0.5f, 0.5f));
         model = translate(model, vec3(0.0f, 0.0f, -1.0f));
@@ -354,7 +451,6 @@ int main()
         model = rotate(model, radians(sharkYaw), vec3(0.0f, 1.0f, 0.0f));
 		SetMatrices(ModelShaders);
 		Shark.Draw(ModelShaders);
-
         model = rotate(model, radians(-sharkYaw), vec3(0.0f, 1.0f, 0.0f));
 		model = scale(model, vec3(2.0f, 2.0f, 2.0f));
 		model = translate(model, vec3(-sharkPosition.x, -sharkPosition.y, 1.0f - sharkPosition.z));
@@ -459,4 +555,13 @@ void SetMatrices(Shader& ShaderProgramIn)
 {
     mvp = projection * view * model; //Setting of MVP
     ShaderProgramIn.setMat4("mvpIn", mvp); //Setting of uniform with Shader class
+}
+
+static void UpdateCameraFront()
+{
+    vec3 direction;
+    direction.x = cos(radians(cameraYaw)) * cos(radians(cameraPitch));
+    direction.y = sin(radians(cameraPitch));
+    direction.z = sin(radians(cameraYaw)) * cos(radians(cameraPitch));
+    cameraFront = normalize(direction);
 }
