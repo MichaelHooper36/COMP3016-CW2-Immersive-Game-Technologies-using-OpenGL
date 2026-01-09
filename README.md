@@ -48,7 +48,7 @@ Once all of these have been successfully installed and copied to the correct pla
 
 ---
 
-YouTube link:  
+YouTube link: https://youtu.be/azwQIB-dhxg<br>  
 
 ### Dependencies Used<br>
 
